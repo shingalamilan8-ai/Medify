@@ -3,9 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useNavigation } from '@react-navigation/native';
 
-
 export default function ScanScreen() {
-  const [cameraFacing, setCameraFacing] = useState('back'); // 'back' | 'front'
+  const [facing, setFacing] = useState('back');
   const [permission, requestPermission] = useCameraPermissions();
   const navigation = useNavigation();
   const [scanned, setScanned] = useState(false);
@@ -14,50 +13,39 @@ export default function ScanScreen() {
     if (!permission) {
       requestPermission();
     }
-  }, [permission, requestPermission]);
+  }, [permission]);
 
   if (!permission) {
-    return (
-      <View style={styles.container}>
-        <Text>Requesting camera permission…</Text>
-      </View>
-    );
+    return <View style={styles.container}><Text>Requesting camera permission...</Text></View>;
   }
 
   if (!permission.granted) {
     return (
       <View style={styles.container}>
-        <Text style={styles.message}>We need your permission to use the camera.</Text>
+        <Text style={styles.message}>We need your permission to use the camera</Text>
         <TouchableOpacity style={styles.button} onPress={requestPermission}>
-          <Text style={styles.buttonText}>Grant permission</Text>
+          <Text style={styles.buttonText}>Grant Permission</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
   const handleBarCodeScanned = ({ data }) => {
-    if (scanned) return;
     setScanned(true);
-
+    
     try {
-      const parts = (data || '').split('|').map((p) => p.trim());
+      // Parse QR code data (assuming format: manufacturerId|batchId|expiryDate)
+      const qrData = data.split('|');
       const medicineData = {
-        manufacturerId: parts[0] || 'Unknown',
-        batchId: parts[1] || 'Unknown',
-        expiryDate: parts[2] || 'Unknown',
-        name: parts[3] || null,
-        raw: data,
+        manufacturerId: qrData[0] || 'Unknown',
+        batchId: qrData[1] || 'Unknown',
+        expiryDate: qrData[2] || 'Unknown'
       };
-
-      // basic validation
-      if (!medicineData.manufacturerId && !medicineData.batchId) {
-        throw new Error('Invalid QR content');
-      }
 
       // Navigate to Verify screen with scanned data
       navigation.navigate('Verify', { medicineData });
-    } catch (err) {
-      Alert.alert('Invalid QR', 'Unable to parse the scanned QR code. Please try again.');
+    } catch (error) {
+      Alert.alert('Error', 'Invalid QR code format');
       setScanned(false);
     }
   };
@@ -65,13 +53,12 @@ export default function ScanScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>MediTrust</Text>
-      <Text style={styles.subtitle}>Digital medicine authenticity checker</Text>
-
+      <Text style={styles.subtitle}>Digital Medicine Authenticity Checker</Text>
+      
       <View style={styles.cameraContainer}>
         <CameraView
           style={styles.camera}
-          facing={cameraFacing}
-          // only scan if not already scanned
+          facing={facing}
           onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
           barcodeScannerSettings={{
             barcodeTypes: ['qr', 'pdf417'],
@@ -82,22 +69,16 @@ export default function ScanScreen() {
         </View>
       </View>
 
-      <Text style={styles.instruction}>Hold the camera steady over the barcode / QR code</Text>
-
-      <View style={{ marginTop: 18, width: '80%' }}>
-        <TouchableOpacity
-          style={[styles.smallButton, { marginBottom: 12 }]}
-          onPress={() => setCameraFacing((f) => (f === 'back' ? 'front' : 'back'))}
+      <Text style={styles.instruction}>Hold over Barcode/QR Code</Text>
+      
+      {scanned && (
+        <TouchableOpacity 
+          style={styles.scanAgainButton} 
+          onPress={() => setScanned(false)}
         >
-          <Text style={styles.smallButtonText}>Flip camera</Text>
+          <Text style={styles.scanAgainText}>Tap to Scan Again</Text>
         </TouchableOpacity>
-
-        {scanned && (
-          <TouchableOpacity style={styles.scanAgainButton} onPress={() => setScanned(false)}>
-            <Text style={styles.scanAgainText}>Tap to scan again</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      )}
     </View>
   );
 }
@@ -111,23 +92,23 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
+    fontWeight: 'bold',
     color: '#2E86AB',
-    marginBottom: 6,
+    marginBottom: 10,
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 16,
     color: '#666',
-    marginBottom: 24,
+    marginBottom: 30,
     textAlign: 'center',
     paddingHorizontal: 20,
   },
   cameraContainer: {
-    width: 320,
-    height: 320,
+    width: 300,
+    height: 300,
     overflow: 'hidden',
     borderRadius: 20,
-    marginBottom: 18,
+    marginBottom: 20,
   },
   camera: {
     flex: 1,
@@ -138,53 +119,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scanFrame: {
-    width: 220,
-    height: 220,
+    width: 200,
+    height: 200,
     borderWidth: 2,
     borderColor: '#2E86AB',
-    borderRadius: 14,
+    borderRadius: 10,
     backgroundColor: 'transparent',
   },
   instruction: {
     fontSize: 16,
     color: '#666',
-    marginTop: 8,
+    marginTop: 20,
   },
   scanAgainButton: {
     backgroundColor: '#2E86AB',
-    padding: 14,
+    padding: 15,
     borderRadius: 10,
-    alignItems: 'center',
+    marginTop: 20,
   },
   scanAgainText: {
-    color: '#fff',
+    color: 'white',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: 'bold',
   },
   button: {
     backgroundColor: '#2E86AB',
-    padding: 14,
+    padding: 15,
     borderRadius: 10,
     marginTop: 20,
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: 'bold',
   },
   message: {
     fontSize: 16,
-    marginBottom: 18,
+    marginBottom: 20,
     textAlign: 'center',
-  },
-  smallButton: {
-    backgroundColor: '#f0f6fb',
-    padding: 12,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  smallButtonText: {
-    color: '#2E86AB',
-    fontWeight: '600',
   },
 });
