@@ -8,25 +8,26 @@ export default function ResultScreen() {
   const { medicineData, verificationResult } = route.params;
 
   const getStatusColor = () => {
-    if (!verificationResult.authentic) return '#FF3B30'; // Red for fake
+    if (verificationResult.isFake) return '#FF3B30'; // Red for fake
     if (verificationResult.expired) return '#FF3B30'; // Red for expired
     if (verificationResult.nearExpiry) return '#FF9500'; // Yellow for near expiry
     return '#34C759'; // Green for authentic
   };
 
   const getStatusMessage = () => {
-    if (!verificationResult.authentic) return 'Counterfeit Medicine Detected';
+    if (verificationResult.isFake) return 'Counterfeit Medicine Detected';
     if (verificationResult.expired) return 'Expired Medicine';
     if (verificationResult.nearExpiry) return 'Medicine Near Expiry';
     return 'Authentic & Safe to Use';
   };
 
   const getStatusEmoji = () => {
-    if (!verificationResult.authentic) return '❌';
+    if (verificationResult.isFake) return '❌';
     if (verificationResult.expired) return '❌';
     if (verificationResult.nearExpiry) return '⚠️';
     return '✅';
   };
+
 
   const handleReport = () => {
     Alert.alert(
@@ -34,8 +35,8 @@ export default function ResultScreen() {
       'Are you sure you want to report this medicine as counterfeit?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Report', 
+        {
+          text: 'Report',
           style: 'destructive',
           onPress: () => {
             // TODO: Implement reporting functionality
@@ -49,7 +50,7 @@ export default function ResultScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>MediTrust</Text>
-      
+
       <View style={[styles.statusCard, { borderColor: getStatusColor() }]}>
         <Text style={[styles.statusEmoji, { color: getStatusColor() }]}>
           {getStatusEmoji()}
@@ -81,7 +82,7 @@ export default function ResultScreen() {
         </TouchableOpacity>
       )}
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.scanAgainButton}
         onPress={() => navigation.navigate('Scan')}
       >

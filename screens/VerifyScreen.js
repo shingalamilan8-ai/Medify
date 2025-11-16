@@ -13,27 +13,70 @@ export default function VerifyScreen() {
     const verifyMedicine = async () => {
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // For now, we'll simulate a response
-      const verificationResult = {
-        authentic: true,
-        nearExpiry: medicineData.expiryDate.includes('2024'), // Example logic
-        expired: false,
-        manufacturer: 'PharmaCorp',
-        batchNumber: medicineData.batchId,
-        expiryDate: medicineData.expiryDate
-      };
 
-      setVerifying(false);
-      
-      // Navigate to result screen after verification
-      setTimeout(() => {
-        navigation.navigate('Result', { 
-          medicineData,
-          verificationResult 
-        });
-      }, 1000);
+      try {
+        // Enhanced verification logic with REAL current date
+        const validManufacturers = ['pharmacorp', 'medlife', 'healthcare', 'biopharm', 'medisafe'];
+        const isFakeManufacturer = !validManufacturers.includes(
+          medicineData.manufacturerId.toLowerCase()
+        );
+
+        // Parse expiry date (format: MM/YYYY)
+        const [expiryMonth, expiryYear] = medicineData.expiryDate.split('/').map(Number);
+
+        // Use REAL current date
+        const currentDate = new Date();
+        const currentYear = currentDate.getFullYear();
+        const currentMonth = currentDate.getMonth() + 1; // January = 1
+
+        // Calculate months until expiry
+        const monthsUntilExpiry = (expiryYear - currentYear) * 12 + (expiryMonth - currentMonth);
+
+        const isExpired = monthsUntilExpiry < 0;
+        const isNearExpiry = monthsUntilExpiry >= 0 && monthsUntilExpiry <= 3;
+
+        const verificationResult = {
+          authentic: !isFakeManufacturer,
+          nearExpiry: isNearExpiry,
+          expired: isExpired,
+          manufacturer: medicineData.manufacturerId,
+          batchNumber: medicineData.batchId,
+          expiryDate: medicineData.expiryDate,
+          isFake: isFakeManufacturer,
+          monthsUntilExpiry: monthsUntilExpiry,
+          currentDate: `${currentMonth}/${currentYear}` // For debugging
+        };
+
+        console.log('Verification Result:', verificationResult); // Debug log
+
+        setVerifying(false);
+
+        setTimeout(() => {
+          navigation.navigate('Result', {
+            medicineData,
+            verificationResult
+          });
+        }, 1000);
+      } catch (error) {
+        // Handle invalid QR format
+        const verificationResult = {
+          authentic: false,
+          nearExpiry: false,
+          expired: false,
+          isFake: true,
+          manufacturer: 'Invalid Format',
+          batchNumber: medicineData.batchId || 'Invalid',
+          expiryDate: medicineData.expiryDate || 'Invalid',
+          error: true
+        };
+
+        setVerifying(false);
+        setTimeout(() => {
+          navigation.navigate('Result', { medicineData, verificationResult });
+        }, 1000);
+      }
     };
+
 
     verifyMedicine();
   }, []);
@@ -43,9 +86,9 @@ export default function VerifyScreen() {
       <Text style={styles.title}>MediTrust</Text>
       <Text style={styles.status}>Verifying authenticity...</Text>
       <Text style={styles.subStatus}>Checking blockchain ledger...</Text>
-      
+
       <ActivityIndicator size="large" color="#2E86AB" style={styles.spinner} />
-      
+
       <View style={styles.details}>
         <Text style={styles.detailTitle}>Scanned Details:</Text>
         <Text>Manufacturer: {medicineData.manufacturerId}</Text>
