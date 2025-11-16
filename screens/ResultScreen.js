@@ -38,6 +38,15 @@ export default function ResultScreen() {
         borderColor: 'rgba(245, 158, 11, 0.3)'
       };
     }
+    if (!verificationResult.authentic) {
+      return {
+        color: '#EF4444',
+        icon: 'close-circle',
+        message: 'Medicine Not Authentic',
+        bgColor: 'rgba(239, 68, 68, 0.1)',
+        borderColor: 'rgba(239, 68, 68, 0.3)'
+      };
+    }
     return {
       color: '#10B981',
       icon: 'checkmark-circle',
@@ -46,6 +55,7 @@ export default function ResultScreen() {
       borderColor: 'rgba(16, 185, 129, 0.3)'
     };
   };
+
 
   const statusConfig = getStatusConfig();
 
@@ -60,7 +70,7 @@ export default function ResultScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const SERVER_IP = '10.48.153.117';
+              const SERVER_IP = '172.19.13.117';
               const response = await fetch(`http://${SERVER_IP}:5000/api/report-counterfeit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -73,14 +83,20 @@ export default function ResultScreen() {
                 }),
               });
 
-              const result = await response.json();
-              if (result.success) {
-                Alert.alert('Report Submitted', 'Thank you for reporting. Authorities have been notified.');
+              // Better response handling
+              if (response.ok) {
+                const result = await response.json();
+                if (result.success) {
+                  Alert.alert('Report Submitted', 'Thank you for reporting. Authorities have been notified.');
+                } else {
+                  Alert.alert('Error', result.message || 'Failed to submit report. Please try again.');
+                }
               } else {
-                Alert.alert('Error', 'Failed to submit report. Please try again.');
+                throw new Error(`Server responded with status: ${response.status}`);
               }
             } catch (error) {
-              Alert.alert('Error', 'Failed to submit report. Please check your connection.');
+              console.error('Report error:', error);
+              Alert.alert('Error', 'Failed to submit report. Please check your connection and try again.');
             }
           }
         }
@@ -113,7 +129,7 @@ export default function ResultScreen() {
             <Ionicons name="information-circle" size={24} color="#3B82F6" />
             <Text style={styles.detailsTitle}>Medicine Details</Text>
           </View>
-          
+
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Manufacturer:</Text>
             <Text style={styles.detailValue}>{verificationResult.manufacturer}</Text>
@@ -133,12 +149,14 @@ export default function ResultScreen() {
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Status:</Text>
               <Text style={[
-                styles.detailValue, 
-                { color: verificationResult.monthsUntilExpiry < 0 ? '#EF4444' : 
-                         verificationResult.monthsUntilExpiry <= 3 ? '#F59E0B' : '#10B981' }
+                styles.detailValue,
+                {
+                  color: verificationResult.monthsUntilExpiry < 0 ? '#EF4444' :
+                    verificationResult.monthsUntilExpiry <= 3 ? '#F59E0B' : '#10B981'
+                }
               ]}>
-                {verificationResult.monthsUntilExpiry < 0 ? 'Expired' : 
-                 verificationResult.monthsUntilExpiry <= 3 ? 'Near Expiry' : 'Valid'}
+                {verificationResult.monthsUntilExpiry < 0 ? 'Expired' :
+                  verificationResult.monthsUntilExpiry <= 3 ? 'Near Expiry' : 'Valid'}
               </Text>
             </View>
           )}
@@ -147,7 +165,7 @@ export default function ResultScreen() {
 
       {/* Action Buttons */}
       <View style={styles.actionsContainer}>
-        {(!verificationResult.authentic || verificationResult.expired) && (
+        {(!verificationResult.authentic || verificationResult.isFake || verificationResult.expired) && (
           <TouchableOpacity style={styles.reportButton} onPress={handleReport}>
             <Ionicons name="warning" size={22} color="#FFFFFF" />
             <Text style={styles.reportButtonText}>Report to Authorities</Text>

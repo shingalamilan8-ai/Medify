@@ -7,14 +7,17 @@ const { width, height } = Dimensions.get('window');
 
 // Helper function remains the same
 const isFakeManufacturer = (manufacturer) => {
+  if (!manufacturer || manufacturer === 'Unknown') return true;
+  
   const manufacturerLower = manufacturer.toLowerCase();
+  const validManufacturers = ['pharmacorp', 'medlife', 'healthcare', 'biopharm', 'medisafe'];
+  
   return (
     manufacturerLower.includes('fake') ||
     manufacturerLower.includes('counterfeit') ||
-    manufacturerLower.includes('unknown') ||
     manufacturerLower.includes('blackmarket') ||
     manufacturerLower.includes('illegal') ||
-    !['pharmacorp', 'medlife', 'healthcare', 'biopharm', 'medisafe'].includes(manufacturerLower)
+    !validManufacturers.some(valid => manufacturerLower.includes(valid))
   );
 };
 
@@ -35,7 +38,7 @@ export default function VerifyScreen() {
 
     const verifyMedicine = async () => {
       try {
-        const SERVER_IP = '10.48.153.117';
+        const SERVER_IP = '172.19.13.117';
         const SERVER_URL = `http://${SERVER_IP}:5000/api/verify-medicine`;
 
         const response = await fetch(SERVER_URL, {
@@ -51,13 +54,13 @@ export default function VerifyScreen() {
         if (!response.ok) throw new Error(`Backend error: ${response.status}`);
 
         const verificationResult = await response.json();
-        
+
         setVerifying(false);
         navigation.navigate('Result', { medicineData, verificationResult });
 
       } catch (error) {
         console.error('Backend connection failed:', error);
-        
+
         const currentDate = new Date();
         const currentYear = currentDate.getFullYear();
         const currentMonth = currentDate.getMonth() + 1;
@@ -66,15 +69,16 @@ export default function VerifyScreen() {
 
         const fallbackResult = {
           authentic: !isFakeManufacturer(medicineData.manufacturerId),
-          nearExpiry: monthsUntilExpiry >= 0 && monthsUntilExpiry <= 3,
-          expired: monthsUntilExpiry < 0,
+          isFake: isFakeManufacturer(medicineData.manufacturerId),
+          foundInDatabase: false,
           manufacturer: medicineData.manufacturerId,
           batchNumber: medicineData.batchId,
           expiryDate: medicineData.expiryDate,
           verifiedOnBlockchain: false,
           message: "Using client-side verification - backend unavailable",
-          isFake: isFakeManufacturer(medicineData.manufacturerId),
-          foundInDatabase: false
+          monthsUntilExpiry: monthsUntilExpiry,
+          expired: monthsUntilExpiry < 0,
+          nearExpiry: monthsUntilExpiry >= 0 && monthsUntilExpiry <= 3
         };
 
         setVerifying(false);
@@ -95,7 +99,7 @@ export default function VerifyScreen() {
       {/* Background with better contrast */}
       <View style={styles.backgroundMain} />
       <View style={styles.backgroundAccent} />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.logoContainer}>
@@ -114,7 +118,7 @@ export default function VerifyScreen() {
         {/* Progress Section */}
         <View style={styles.progressSection}>
           <Text style={styles.verificationTitle}>Verifying Authenticity</Text>
-          
+
           {/* Progress Bar with better visibility */}
           <View style={styles.progressContainer}>
             <View style={styles.progressBackground}>
