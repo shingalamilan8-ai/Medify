@@ -76,6 +76,13 @@ export default function ResultScreen() {
         </View>
       </View>
 
+      <View style={styles.debugCard}>
+        <Text style={styles.debugTitle}>Debug Info</Text>
+        <Text>Months until expiry: {verificationResult.monthsUntilExpiry}</Text>
+        <Text>Current date: {verificationResult.currentDate}</Text>
+        <Text>Expiry date: {verificationResult.expiryDate}</Text>
+      </View>
+
       {(!verificationResult.authentic || verificationResult.expired) && (
         <TouchableOpacity style={styles.reportButton} onPress={handleReport}>
           <Text style={styles.reportButtonText}>Report to Authorities</Text>
@@ -174,5 +181,17 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  debugCard: {
+    backgroundColor: '#f0f0f0',
+    padding: 15,
+    borderRadius: 10,
+    width: '80%',
+    marginTop: 20,
+  },
+  debugTitle: {
+    fontWeight: 'bold',
+    marginBottom: 5,
+    color: '#666',
   },
 });
