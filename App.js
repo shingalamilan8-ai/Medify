@@ -10,30 +10,10 @@ const Stack = createStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName="Scan"
-        screenOptions={{
-          headerStyle: { backgroundColor: '#fff' },
-          headerTintColor: '#2E86AB',
-          headerTitleStyle: { fontWeight: '700' },
-          cardStyle: { backgroundColor: '#fff' },
-        }}
-      >
-        <Stack.Screen
-          name="Scan"
-          component={ScanScreen}
-          options={{ title: 'Scan Medicine', headerShown: false }}
-        />
-        <Stack.Screen
-          name="Verify"
-          component={VerifyScreen}
-          options={{ title: 'Verifying…', headerBackTitle: 'Back' }}
-        />
-        <Stack.Screen
-          name="Result"
-          component={ResultScreen}
-         options={{ title: 'Result', headerBackTitle: 'Back' }}
-        />
+      <Stack.Navigator initialRouteName="Scan">
+        <Stack.Screen name="Scan" component={ScanScreen} />
+        <Stack.Screen name="Verify" component={VerifyScreen} />
+        <Stack.Screen name="Result" component={ResultScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
