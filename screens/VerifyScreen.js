@@ -35,7 +35,7 @@ export default function VerifyScreen() {
 
     const verifyMedicine = async () => {
       try {
-        const SERVER_IP = '192.168.1.35';
+        const SERVER_IP = '10.48.153.117';
         const SERVER_URL = `http://${SERVER_IP}:5000/api/verify-medicine`;
 
         const response = await fetch(SERVER_URL, {

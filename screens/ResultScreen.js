@@ -60,7 +60,7 @@ export default function ResultScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              const SERVER_IP = '192.168.1.35';
+              const SERVER_IP = '10.48.153.117';
               const response = await fetch(`http://${SERVER_IP}:5000/api/report-counterfeit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
